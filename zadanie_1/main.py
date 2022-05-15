@@ -137,10 +137,6 @@ if __name__ == "__main__":
             json.dump(save_list, file)
 
 
-    # def load():
-    #     with open(f'{signal_value.name}.json', 'w') as file:
-    #         json.dump(save_list, file)
-
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     signal_1 = Signal()
@@ -155,7 +151,6 @@ if __name__ == "__main__":
     ui.comboBox_5.addItems(["signal_1", "signal_2", "results"])
     ui.pushButton.clicked.connect(update_values)
     ui.pushButton_2.clicked.connect(save)
-
 
     MainWindow.show()
     sys.exit(app.exec_())
