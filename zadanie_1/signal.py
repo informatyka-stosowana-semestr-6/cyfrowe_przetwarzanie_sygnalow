@@ -1,15 +1,14 @@
 import numpy as np
 from numpy import random
 import math
+import statistics
+import json
 
 
 class Signal:
-    ##########################
-    # CONSTANT
-    ##########################
-
 
     def __init__(self):
+        self.name = None
         self.all_signals = self._generate_dict_with_all_signals()
         self.MATH = self._generate_math()
         self.x_values = None
@@ -22,6 +21,13 @@ class Signal:
         self.jump_time = None
         self.possibility = None
         self.freq = 60
+
+        self.average = None
+        self.absolut_average = None
+        self.power_average = None
+        self.variance = None
+        self.effective_value = None
+
 
     def set_x(self):
         self.x_values = np.linspace(float(self.t1), float(self.t1) + float(self.d), int(float(self.d) * float(self.freq)))
@@ -37,7 +43,8 @@ class Signal:
                 "TRIANGULAR_SIGNAL": self._triangular_signal,
                 "UNIT_JUMP": self._unit_jump,
                 "UNIT_IMPULSE": self._unit_impulse,
-                "IMPULSE_NOISE": self._impulse_noise}
+                "IMPULSE_NOISE": self._impulse_noise,
+                "FROM_FILE": self.load}
 
     def _generate_math(self):
         return {"Dodawanie": self.add, "Odejmowanie": self.subtraction, "Mnożenie": self.multiply, "Dzielenie": self.division}
@@ -156,3 +163,53 @@ class Signal:
             file.write(f"signal = {signal}")
             file.write(f"x = {self.x_values}")
             file.write(f"y = {self.y_values}")
+
+    def load(self, file_name):
+        with open(file_name, 'r') as file:
+            data = json.load(file)
+        self.name = data["signal name"]
+        self.t1 = data["t1"]
+        self.A = data["A"]
+        self.freq = data["freq"]
+        self.x_values = np.array(data["x_values"])
+        self.y_values = np.array(data["y_values"])
+        self.d = data["d"]
+        self.T = data["T"]
+        self.kw = data["kw"]
+        self.jump_time = data["jump_time"]
+        self.possibility = data["possibility"]
+
+    # Statistics
+    def _calculate_avg(self):
+        self.average = statistics.mean(self.y_values)
+
+    def _calculate_abs_avg(self):
+        self.absolut_average = abs(self.average)
+
+    def _calculate_power_avg(self):
+        if self.T == 0:
+            tmp = np.power(self.y_values, 2)
+            self.power_average = np.around(np.nanmean(tmp), 4)
+        else:
+            rest = self.d % self.T * self.freq
+            y_temp = self.y_values[0:int(len(self.y_values) - rest)]
+            tmp = np.power(y_temp, 2)
+            self.power_average = np.around(np.nanmean(tmp), 4)
+
+    def _calculate_variance(self):
+        if self.T == 0:
+            self.variance = np.around(np.nanvar(self.y_values), 4)
+        else:
+            rest = self.d % self.T * self.freq
+            y_temp = self.y_values[0:int(len(self.y_values) - rest)]
+            self.variance = np.around(np.nanvar(y_temp), 4)
+
+    def _calculate_effective_value(self):
+        self.effective_value = np.around(np.sqrt(self.power_average), 4)
+
+    def calculate_all_statistics(self):
+        self._calculate_avg()
+        self._calculate_abs_avg()
+        self._calculate_power_avg()
+        self._calculate_variance()
+        self._calculate_effective_value()
