@@ -89,6 +89,7 @@ if __name__ == "__main__":
                 sig.jump_time = float(ui.lineEdit_6.text())
                 sig.possibility = float(ui.lineEdit_7.text())
                 sig.freq = float(ui.lineEdit_8.text())
+                sig.sampling['number'] = int(ui.lineEdit_9.text())
                 if sig == signal_1:
                     sig.generate(ui.comboBox.currentText())
                     sig.name = ui.comboBox.currentText()
@@ -113,6 +114,7 @@ if __name__ == "__main__":
             create_chart(sig)
             create_hist(sig)
             print_statistic(sig)
+            sampling(sig)
 
     def save():
         signals = {"signal_1": signal_1, "signal_2": signal_2, "results": results}
@@ -136,6 +138,19 @@ if __name__ == "__main__":
         with open(f'{ui.comboBox_5.currentText()}.json', 'w') as file:
             json.dump(save_list, file)
 
+    def sampling(signal_value):
+        signal_value.set_sampling_array()
+        plt.figure()
+        plt.scatter(signal_value.x_values, signal_value.y_values)
+        if signal_value == signal_1:
+            plt.savefig("sampling_1.png", dpi=300)
+            ui.label_25.setPixmap(QtGui.QPixmap("sampling_1.png"))
+        elif signal_value == signal_2:
+            plt.savefig("sampling_2.png", dpi=300)
+            ui.label_26.setPixmap(QtGui.QPixmap("sampling_2.png"))
+        else:
+            plt.savefig("sampling_result.png", dpi=300)
+            ui.label_27.setPixmap(QtGui.QPixmap("sampling_result.png"))
 
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()

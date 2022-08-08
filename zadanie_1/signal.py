@@ -28,6 +28,7 @@ class Signal:
         self.variance = None
         self.effective_value = None
 
+        self.sampling = {"x": [], "y": [], "number": None}
 
     def set_x(self):
         self.x_values = np.linspace(float(self.t1), float(self.t1) + float(self.d), int(float(self.d) * float(self.freq)))
@@ -45,6 +46,15 @@ class Signal:
                 "UNIT_IMPULSE": self._unit_impulse,
                 "IMPULSE_NOISE": self._impulse_noise,
                 "FROM_FILE": self.load}
+
+    def set_sampling_array(self):
+        self.sampling['x'] = []
+        self.sampling['y'] = []
+
+        for i in range(self.sampling['number']):
+            index_to_get = int(i * len(self.x_values) / self.sampling['number'])
+            self.sampling['x'].append(self.x_values[index_to_get])
+            self.sampling['y'].append(self.y_values[index_to_get])
 
     def _generate_math(self):
         return {"Dodawanie": self.add, "Odejmowanie": self.subtraction, "Mnożenie": self.multiply, "Dzielenie": self.division}
@@ -184,7 +194,7 @@ class Signal:
         self.average = statistics.mean(self.y_values)
 
     def _calculate_abs_avg(self):
-        self.absolut_average = abs(self.average)
+        self.absolut_average = statistics.mean(np.absolute(self.y_values))
 
     def _calculate_power_avg(self):
         if self.T == 0:
