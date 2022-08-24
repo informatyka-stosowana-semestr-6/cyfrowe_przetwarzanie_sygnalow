@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import sin
 from numpy import random
 import math
 import statistics
@@ -27,8 +28,21 @@ class Signal:
         self.power_average = None
         self.variance = None
         self.effective_value = None
+        self.quant_level = None
 
         self.sampling = {"x": [], "y": [], "number": None}
+        self.quantization_dict = {"x": [], "y": []}
+        self.y_R2 = []
+        self.y_R3 = []
+        self.num_of_samples_sinc = None
+        self.mse_R2 = None
+        self.mse_R3 = None
+        self.snr_R2 = None
+        self.snr_R3 = None
+        self.psnr_R2 = None
+        self.psnr_R3 = None
+        self.md_R2 = None
+        self.md_R3 = None
 
     def set_x(self):
         self.x_values = np.linspace(float(self.t1), float(self.t1) + float(self.d), int(float(self.d) * float(self.freq)))
@@ -55,6 +69,70 @@ class Signal:
             index_to_get = int(i * len(self.x_values) / self.sampling['number'])
             self.sampling['x'].append(self.x_values[index_to_get])
             self.sampling['y'].append(self.y_values[index_to_get])
+
+    def set_quantization_array(self):
+        self.quantization_dict['x'] = self.sampling['x']
+        for y in self.sampling['y']:
+            self.quantization_dict['y'].append(int(y - (y % self.quant_level)))
+
+    def set_reconstruction_r2_array(self):
+        # TODO
+        self.y_R2 = [0 for _ in range(len(self.y_values))]
+
+    def sinc(self, t):
+        if t == 0:
+            return 1
+        else:
+            return sin(np.pi * t) / (np.pi * t)
+
+    def set_reconstruction_r3_array(self):
+        ts = 1 / self.sampling['number']
+        for x in self.x_values:
+            n = 0
+            for i in range(len(self.sampling['x'])):
+                if self.sampling['x'][i] <= x and i + 1 == len(self.sampling['x']):
+                    n = i
+                elif self.sampling['x'][i] <= x < self.sampling['x'][i + 1]:
+                    n = i
+                    break
+
+            indexes = [n - self.sampling['number'] + 1 + i for i in range(self.sampling['number'] * 2)
+                       if ((n - self.sampling['number'] + 1 + i) > -1) and (
+                               (n - self.sampling['number'] + 1 + i) < len(self.quantization_dict['y']))]
+
+            y = sum((self.quantization_dict['y'][i] * self.sinc((x - self.t1) / ts - i) for i in indexes))
+            self.y_R3.append(y)
+
+    def calculate_mse(self):
+        y_len = len(self.y_values)
+        self.mse_R2 = 1 / y_len * sum(pow((self.y_values[i] - self.y_R2[i]), 2) for i in range(y_len))
+        self.mse_R3 = 1 / y_len * sum(pow((self.y_values[i] - self.y_R3[i]), 2) for i in range(y_len))
+
+    def calculate_snr(self):
+        y_len = len(self.y_values)
+        sum_y = sum(pow(self.y_values[i], 2) for i in range(y_len))
+        sum_r2 = sum(pow((self.y_values[i] - self.y_R2[i]), 2) for i in range(y_len))
+        sum_r3 = sum(pow((self.y_values[i] - self.y_R3[i]), 2) for i in range(y_len))
+        self.snr_R2 = 10 * np.log10(sum_y / sum_r2)
+        self.snr_R3 = 10 * np.log10(sum_y / sum_r3)
+
+    def calculate_psnr(self):
+        max_y = np.max(self.y_values)
+        self.psnr_R2 = 10 * np.log10(max_y / self.mse_R2)
+        self.psnr_R3 = 10 * np.log10(max_y / self.mse_R3)
+
+    def calculate_md(self):
+        n = len(self.y_values)
+        diff_r2 = (np.abs(self.y_values[i] - self.y_R2[i]) for i in range(n))
+        diff_r3 = (np.abs(self.y_values[i] - self.y_R3[i]) for i in range(n))
+        self.md_R2 = max(diff_r2)
+        self.md_R3 = max(diff_r3)
+
+    def calculate_all_zad_2(self):
+        self.calculate_mse()
+        self.calculate_snr()
+        self.calculate_psnr()
+        self.calculate_md()
 
     def _generate_math(self):
         return {"Dodawanie": self.add, "Odejmowanie": self.subtraction, "Mnożenie": self.multiply, "Dzielenie": self.division}

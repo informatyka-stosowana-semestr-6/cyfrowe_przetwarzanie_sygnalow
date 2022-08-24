@@ -73,6 +73,18 @@ if __name__ == "__main__":
         signal_label[signal_value].setText(text)
         signal_label[signal_value].setText(text)
 
+        if signal_value == signal_1:
+            signal_value.calculate_all_zad_2()
+            text_zad2 = f"R2 - MSE: {signal_value.mse_R2}\n" \
+                        f"R3 - MSE: {signal_value.mse_R3}\n" \
+                        f"R2 - SNR: {signal_value.snr_R2}\n" \
+                        f"R3 - SNR: {signal_value.snr_R3}\n" \
+                        f"R2 - PSNR: {signal_value.psnr_R2}\n" \
+                        f"R3 - PSNR: {signal_value.psnr_R3}\n" \
+                        f"R2 - MD: {signal_value.md_R2}\n" \
+                        f"R3 - MD: {signal_value.md_R3}"
+            ui.label_31.setText(text_zad2)
+
     def _():
         return ""
 
@@ -90,6 +102,9 @@ if __name__ == "__main__":
                 sig.possibility = float(ui.lineEdit_7.text())
                 sig.freq = float(ui.lineEdit_8.text())
                 sig.sampling['number'] = int(ui.lineEdit_9.text())
+                sig.quant_level = int(ui.lineEdit_10.text())
+                sig.num_of_samples_sinc = int(ui.lineEdit_11.text())
+
                 if sig == signal_1:
                     sig.generate(ui.comboBox.currentText())
                     sig.name = ui.comboBox.currentText()
@@ -113,8 +128,10 @@ if __name__ == "__main__":
             # plots & statistics
             create_chart(sig)
             create_hist(sig)
-            print_statistic(sig)
             sampling(sig)
+            quantization(sig)
+            reconstruction(sig)
+            print_statistic(sig)
 
     def save():
         signals = {"signal_1": signal_1, "signal_2": signal_2, "results": results}
@@ -141,7 +158,7 @@ if __name__ == "__main__":
     def sampling(signal_value):
         signal_value.set_sampling_array()
         plt.figure()
-        plt.scatter(signal_value.x_values, signal_value.y_values)
+        plt.scatter(signal_value.sampling['x'], signal_value.sampling['y'])
         if signal_value == signal_1:
             plt.savefig("sampling_1.png", dpi=300)
             ui.label_25.setPixmap(QtGui.QPixmap("sampling_1.png"))
@@ -151,6 +168,28 @@ if __name__ == "__main__":
         else:
             plt.savefig("sampling_result.png", dpi=300)
             ui.label_27.setPixmap(QtGui.QPixmap("sampling_result.png"))
+
+    def quantization(signal_value: Signal):
+        signal_value.set_quantization_array()
+        if signal_value == signal_1:
+            plt.figure()
+            plt.scatter(signal_value.quantization_dict['x'], signal_value.quantization_dict['y'])
+            plt.savefig("quantization_1.png", dpi=300)
+            ui.label_23.setPixmap(QtGui.QPixmap("quantization_1.png"))
+
+    def reconstruction(signal_value: Signal):
+        signal_value.set_reconstruction_r2_array()
+        signal_value.set_reconstruction_r3_array()
+        if signal_value == signal_1:
+            plt.figure()
+            #TODO
+            # plt.plot(signal_value.x_values, signal_value.y_R2)
+            # plt.savefig("r2.png", dpi=300)
+            # ui.label_29.setPixmap(QtGui.QPixmap("r2.png"))
+
+            plt.plot(signal_value.x_values, signal_value.y_R3)
+            plt.savefig("r3.png", dpi=300)
+            ui.label_30.setPixmap(QtGui.QPixmap("r3.png"))
 
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
