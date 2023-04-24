@@ -89,6 +89,9 @@ if __name__ == "__main__":
         return ""
 
     def update_values():
+        signal_1.__init__()
+        signal_2.__init__()
+        results.__init__()
         signals = {signal_1: ui.comboBox.currentText, signal_2: ui.comboBox_2.currentText, results: _}
 
         for sig in signals.keys():
@@ -182,11 +185,11 @@ if __name__ == "__main__":
         signal_value.set_reconstruction_r3_array()
         if signal_value == signal_1:
             plt.figure()
-            #TODO
-            # plt.plot(signal_value.x_values, signal_value.y_R2)
-            # plt.savefig("r2.png", dpi=300)
-            # ui.label_29.setPixmap(QtGui.QPixmap("r2.png"))
+            plt.plot(signal_value.sampling['x'], signal_value.sampling['y'])
+            plt.savefig("r2.png", dpi=300)
+            ui.label_29.setPixmap(QtGui.QPixmap("r2.png"))
 
+            plt.figure()
             plt.plot(signal_value.x_values, signal_value.y_R3)
             plt.savefig("r3.png", dpi=300)
             ui.label_30.setPixmap(QtGui.QPixmap("r3.png"))

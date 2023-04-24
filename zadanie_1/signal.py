@@ -77,7 +77,16 @@ class Signal:
 
     def set_reconstruction_r2_array(self):
         # TODO
-        self.y_R2 = [0 for _ in range(len(self.y_values))]
+        for x in self.x_values:
+            for (x1, y1), (x2, y2) in zip(zip(self.sampling['x'], self.sampling['y']), zip(self.sampling['x'][1::], self.sampling['y'][1::])):
+                if x1 <= x <= x2:
+                    self.y_R2.append((((y2 - y1) / (x2 - x1)) * (x - x1)) - 1)
+                    break
+                elif x < x1:
+                    self.y_R2.append(0)
+                    break
+            else:
+                self.y_R2.append((((self.sampling['y'][-1] - self.sampling['y'][-2]) / (self.sampling['x'][-1] - self.sampling['x'][-2])) * (x - self.sampling['x'][-2])) - 1)
 
     def sinc(self, t):
         if t == 0:
